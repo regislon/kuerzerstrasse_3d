@@ -1,0 +1,501 @@
+<meta charset="utf-8">
+<title>Kürzerstrasse 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed 3D view; one compact control rail top-left, hint strip bottom, touch pads on phones. */
+:root {
+  --bg: #e9ecea;            /* sky-ish ground behind the canvas */
+  --panel: rgba(250, 251, 249, 0.92);
+  --ink: #1c2421;
+  --muted: #5d6a65;
+  --line: rgba(28, 36, 33, 0.14);
+  --accent: #2f6f5e;        /* cedar green */
+  --accent-ink: #ffffff;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101513; --panel: rgba(22, 29, 26, 0.9); --ink: #e6ece9; --muted: #9aa8a2;
+    --line: rgba(230, 236, 233, 0.16); --accent: #6fbca4; --accent-ink: #0d1412; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101513; --panel: rgba(22, 29, 26, 0.9); --ink: #e6ece9; --muted: #9aa8a2;
+  --line: rgba(230, 236, 233, 0.16); --accent: #6fbca4; --accent-ink: #0d1412; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--display); overflow: hidden; }
+#view { position: fixed; inset: 0; }
+#view canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+.rail {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 16px;
+  width: min(300px, calc(100vw - 32px)); display: grid; gap: 10px;
+  padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  backdrop-filter: blur(6px); z-index: 2;
+}
+.rail h1 { margin: 0; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.01em; text-wrap: balance; }
+.rail .sub { margin: 0; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.02em; }
+.rail label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.rail select, .rail button {
+  font: 500 0.88rem var(--display); color: var(--ink); background: transparent;
+  border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%;
+}
+.rail select:focus-visible, .rail button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 8px; }
+.row button { flex: 1; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.readout { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rail.collapsed .more { display: none; }
+.toggle { justify-self: start; padding: 4px 8px !important; width: auto !important; font-size: 0.75rem !important; }
+
+.hint {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); max-width: calc(100vw - 32px);
+  padding: 8px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  font-size: 0.8rem; color: var(--ink); text-align: center; z-index: 2;
+}
+.hint kbd { font-family: var(--mono); font-size: 0.74rem; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.cross { position: fixed; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+  border: 1.5px solid rgba(255,255,255,0.8); border-radius: 50%; mix-blend-mode: difference; pointer-events: none; z-index: 1; }
+
+/* welcome window: how to move, shown while the model loads; Start closes it */
+.loading { position: fixed; inset: 0; display: grid; place-items: center; z-index: 3; background: var(--bg);
+  padding: 16px; overflow-y: auto; }
+.intro { width: min(440px, 100%); display: grid; gap: 18px; padding: 24px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+.intro h2 { margin: 0; font-size: 1.3rem; font-weight: 700; text-wrap: balance; }
+.intro .sub { margin: -10px 0 0; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.howto { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.howto li { display: grid; grid-template-columns: 92px 1fr; gap: 14px; align-items: center; font-size: 0.92rem; line-height: 1.4; }
+.howto .ico { display: grid; justify-items: center; color: var(--ink); }
+.arrows { display: grid; grid-template-columns: repeat(3, 26px); grid-template-rows: repeat(2, 26px); gap: 3px; }
+.arrows kbd:nth-child(1) { grid-area: 1 / 2; } .arrows kbd:nth-child(2) { grid-area: 2 / 1; }
+.arrows kbd:nth-child(3) { grid-area: 2 / 2; } .arrows kbd:nth-child(4) { grid-area: 2 / 3; }
+.intro kbd { display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; box-sizing: border-box;
+  font: 500 0.78rem var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--bg); }
+.howto .small kbd { display: inline-grid; height: 22px; }
+.touch .desk, body:not(.touch) .tch { display: none; }
+.intro .status { margin: 0; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.intro button { font: 600 0.95rem var(--display); padding: 11px 14px; border-radius: 8px; border: 1px solid var(--accent); cursor: pointer; }
+.intro button:disabled { opacity: 0.45; cursor: progress; }
+.intro button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* touch: left pad moves, right side looks */
+.pad { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 64px); left: 24px; width: 120px; height: 120px;
+  border-radius: 50%; border: 1.5px solid var(--line); background: var(--panel); z-index: 2; touch-action: none; display: none; }
+.pad .knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  border-radius: 50%; background: var(--accent); opacity: 0.85; }
+body.touch .pad { display: block; }
+body.touch .cross { display: none; }
+@media (max-width: 520px) { .rail { padding: 10px 12px; } .rail h1 { font-size: 1rem; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div id="view"></div>
+<div class="cross" aria-hidden="true"></div>
+
+<div class="rail" id="rail">
+  <div>
+    <h1>Kürzerstrasse 9</h1>
+    <p class="sub" data-t="sub"></p>
+  </div>
+  <button class="toggle" id="collapse" aria-expanded="true" data-t="hide"></button>
+  <div class="more" style="display:grid; gap:10px">
+    <div style="display:grid; gap:4px">
+      <label for="room" data-t="goto"></label>
+      <select id="room"></select>
+    </div>
+    <div class="row">
+      <button id="walk" class="primary" data-t="walk"></button>
+      <button id="fly" aria-pressed="false" data-t="fly"></button>
+    </div>
+    <div class="readout" id="readout">—</div>
+  </div>
+</div>
+
+<div class="hint" id="hint" data-t="hint"></div>
+<div class="pad" id="pad" aria-label=""><div class="knob" id="knob"></div></div>
+<div class="loading" id="loading">
+  <div class="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <h2 id="intro-title" data-t="introTitle"></h2>
+    <p class="sub" data-t="sub"></p>
+    <ul class="howto">
+      <li class="desk"><span class="ico arrows"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span data-t="howMove"></span></li>
+      <li class="desk"><span class="ico"><svg width="30" height="44" viewBox="0 0 30 44" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="26" height="40" rx="13"/><line x1="15" y1="2" x2="15" y2="17"/><path d="M-6 26 h6 M30 26 h6" stroke-linecap="round"/></svg></span><span data-t="howLook"></span></li>
+      <li class="desk small"><span class="ico"><kbd data-t="shiftKey"></kbd></span><span data-t="howRun"></span></li>
+      <li class="desk small"><span class="ico"><kbd data-t="escKey"></kbd></span><span data-t="howExit"></span></li>
+      <li class="tch"><span class="ico"><svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="22" cy="22" r="20"/><circle cx="22" cy="22" r="8" fill="currentColor"/></svg></span><span data-t="howTouchMove"></span></li>
+      <li class="tch"><span class="ico"><svg width="44" height="30" viewBox="0 0 44 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 15 h36 M10 9 l-6 6 6 6 M34 9 l6 6 -6 6"/></svg></span><span data-t="howTouchLook"></span></li>
+    </ul>
+    <p class="status" id="loadmsg" data-t="loading"></p>
+    <button id="start" class="primary" disabled data-t="start"></button>
+  </div>
+</div>
+<script>
+// UI language = #xx in the URL, else the first browser language among en / de / fr / ro / ru; English otherwise.
+const I18N = {
+  en: { introTitle: "Walk through the house", howMove: "Use the <b>arrow keys</b> (or W A S D) to move forward, back and sideways.", howLook: "Move the <b>mouse</b> to turn and choose your direction.", shiftKey: "Shift", howRun: "hold to run", escKey: "Esc", howExit: "gives the mouse back", howTouchMove: "Use the <b>joystick</b> at the bottom left to move.", howTouchLook: "<b>Drag</b> on the right side of the screen to look around.", ready: "The house is ready.", start: "Start", 
+        sub: "2562 Port · renovation project · eye at 1.70 m", hide: "Hide", menu: "Menu", goto: "Go to",
+        walk: "Walk", walking: "Walking", fly: "Fly",
+        hint: "Click <b>Walk</b>, then the <kbd>arrow keys</kbd> to move, mouse to look, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to stop",
+        touch: "Joystick to move · drag on the right to look", pad: "Movement joystick",
+        loading: "Loading the house…", errOpen: "Could not open the model: ", errRead: "The model could not be read. Reload the page.",
+        errLoad: "The model could not be loaded. Reload the page.",
+        flying: "free flight", up: "upper floor (1F)", ground: "ground floor (GF)", out: "outside", floor: "floor", asl: "m a.s.l.",
+        rooms: ["Entrance (street)", "GF · Entrance hall", "GF · Hall / stairs", "GF · Living room / kitchen",
+                "GF · Bedroom / cinema", "GF · Workshop (atelier)", "GF · Bathrooms", "1F · Hall", "1F · Kitchen / dining",
+                "1F · Living room", "1F · Parents' bedroom", "1F · Children's room 1", "1F · Children's room 2", "South terrace"] },
+  de: { introTitle: "Rundgang durch das Haus", howMove: "Mit den <b>Pfeiltasten</b> (oder W A S D) vorwärts, rückwärts und seitwärts gehen.", howLook: "Die <b>Maus</b> bewegen, um sich umzudrehen und die Richtung zu wählen.", shiftKey: "Umschalt", howRun: "gedrückt halten zum Rennen", escKey: "Esc", howExit: "gibt die Maus wieder frei", howTouchMove: "Mit dem <b>Joystick</b> unten links bewegen.", howTouchLook: "Rechts auf dem Bildschirm <b>wischen</b>, um sich umzusehen.", ready: "Das Haus ist bereit.", start: "Los geht's", 
+        sub: "2562 Port · Umbauprojekt · Augenhöhe 1.70 m", hide: "Ausblenden", menu: "Menü", goto: "Gehe zu",
+        walk: "Gehen", walking: "Unterwegs", fly: "Fliegen",
+        hint: "<b>Gehen</b> klicken, dann <kbd>Pfeiltasten</kbd> zum Bewegen, Maus zum Umsehen, <kbd>Umschalt</kbd> zum Rennen, <kbd>Esc</kbd> zum Beenden",
+        touch: "Joystick zum Bewegen · rechts wischen zum Umsehen", pad: "Bewegungs-Joystick",
+        loading: "Das Haus wird geladen…", errOpen: "Fehler beim Öffnen des Modells: ", errRead: "Das Modell konnte nicht gelesen werden. Seite neu laden.",
+        errLoad: "Das Modell konnte nicht geladen werden. Seite neu laden.",
+        flying: "freier Flug", up: "Obergeschoss (OG)", ground: "Erdgeschoss (EG)", out: "aussen", floor: "Boden", asl: "m ü. M.",
+        rooms: ["Eingang (Strasse)", "EG · Eingang", "EG · Flur / Treppe", "EG · Wohnzimmer / Küche",
+                "EG · Schlafzimmer / Kino", "EG · Atelier", "EG · Bäder", "OG · Flur", "OG · Küche / Essecke",
+                "OG · Wohnzimmer", "OG · Elternschlafzimmer", "OG · Kinderzimmer 1", "OG · Kinderzimmer 2", "Terrasse Süd"] },
+  fr: { introTitle: "Visite de la maison", howMove: "Utilisez les <b>flèches du clavier</b> (ou W A S D) pour avancer, reculer et vous déplacer de côté.", howLook: "Bougez la <b>souris</b> pour tourner et choisir la direction.", shiftKey: "Maj", howRun: "maintenir pour courir", escKey: "Échap", howExit: "libère la souris", howTouchMove: "Utilisez le <b>joystick</b> en bas à gauche pour avancer.", howTouchLook: "<b>Glissez</b> sur la droite de l'écran pour regarder autour.", ready: "La maison est prête.", start: "Commencer", 
+        sub: "2562 Port · projet de rénovation · œil à 1.70 m", hide: "Masquer", menu: "Menu", goto: "Aller à",
+        walk: "Marcher", walking: "En marche", fly: "Voler",
+        hint: "Cliquez <b>Marcher</b>, puis les <kbd>flèches</kbd> pour avancer, souris pour regarder, <kbd>Maj</kbd> pour courir, <kbd>Échap</kbd> pour sortir",
+        touch: "Joystick pour avancer · glissez à droite pour regarder", pad: "Joystick de déplacement",
+        loading: "Chargement de la maison…", errOpen: "Erreur à l'ouverture du modèle : ", errRead: "Le modèle n'a pas pu être lu. Rechargez la page.",
+        errLoad: "Le modèle n'a pas pu être chargé. Rechargez la page.",
+        flying: "vol libre", up: "étage (OG)", ground: "rez (EG)", out: "extérieur", floor: "sol", asl: "m s.m.",
+        rooms: ["Entrée (rue)", "Rez · Entrée", "Rez · Couloir / escalier", "Rez · Séjour / cuisine",
+                "Rez · Chambre / cinéma", "Rez · Atelier", "Rez · Bains", "Étage · Couloir", "Étage · Cuisine / coin repas",
+                "Étage · Séjour", "Étage · Chambre parents", "Étage · Chambre d'enfants 1", "Étage · Chambre d'enfants 2", "Terrasse sud"] },
+  ro: { introTitle: "Plimbare prin casă", howMove: "Folosiți <b>tastele săgeți</b> (sau W A S D) pentru a merge înainte, înapoi și lateral.", howLook: "Mișcați <b>mouse-ul</b> pentru a vă întoarce și a alege direcția.", shiftKey: "Shift", howRun: "țineți apăsat pentru a alerga", escKey: "Esc", howExit: "eliberează mouse-ul", howTouchMove: "Folosiți <b>joystick-ul</b> din stânga jos pentru deplasare.", howTouchLook: "<b>Glisați</b> în partea dreaptă a ecranului pentru a privi în jur.", ready: "Casa este gata.", start: "Începe", 
+        sub: "2562 Port · proiect de renovare · ochi la 1.70 m", hide: "Ascunde", menu: "Meniu", goto: "Mergi la",
+        walk: "Mergi", walking: "În mers", fly: "Zbor",
+        hint: "Apăsați <b>Mergi</b>, apoi <kbd>săgețile</kbd> pentru deplasare, mouse-ul pentru a privi, <kbd>Shift</kbd> pentru a alerga, <kbd>Esc</kbd> pentru a ieși",
+        touch: "Joystick pentru deplasare · glisați în dreapta pentru a privi", pad: "Joystick de deplasare",
+        loading: "Se încarcă casa…", errOpen: "Eroare la deschiderea modelului: ", errRead: "Modelul nu a putut fi citit. Reîncărcați pagina.",
+        errLoad: "Modelul nu a putut fi încărcat. Reîncărcați pagina.",
+        flying: "zbor liber", up: "etaj", ground: "parter", out: "exterior", floor: "pardoseală", asl: "m alt.",
+        rooms: ["Intrare (stradă)", "Parter · Intrare", "Parter · Hol / scară", "Parter · Living / bucătărie",
+                "Parter · Dormitor / cinema", "Parter · Atelier", "Parter · Băi", "Etaj · Hol", "Etaj · Bucătărie / loc de luat masa",
+                "Etaj · Living", "Etaj · Dormitorul părinților", "Etaj · Camera copiilor 1", "Etaj · Camera copiilor 2", "Terasa de sud"] },
+  ru: { introTitle: "Прогулка по дому", howMove: "<b>Стрелки</b> (или W A S D) — идти вперёд, назад и в сторону.", howLook: "Двигайте <b>мышь</b>, чтобы поворачиваться и выбирать направление.", shiftKey: "Shift", howRun: "удерживайте для бега", escKey: "Esc", howExit: "освобождает мышь", howTouchMove: "<b>Джойстик</b> внизу слева — движение.", howTouchLook: "<b>Проводите</b> пальцем справа, чтобы осматриваться.", ready: "Дом готов.", start: "Начать", 
+        sub: "2562 Порт · проект реконструкции · глаза на высоте 1.70 м", hide: "Скрыть", menu: "Меню", goto: "Перейти",
+        walk: "Идти", walking: "Прогулка", fly: "Полёт",
+        hint: "Нажмите <b>Идти</b>, затем <kbd>стрелки</kbd> для движения, мышь — чтобы осматриваться, <kbd>Shift</kbd> — бег, <kbd>Esc</kbd> — выход",
+        touch: "Джойстик — движение · проведите справа, чтобы осматриваться", pad: "Джойстик движения",
+        loading: "Загрузка дома…", errOpen: "Ошибка при открытии модели: ", errRead: "Не удалось прочитать модель. Перезагрузите страницу.",
+        errLoad: "Не удалось загрузить модель. Перезагрузите страницу.",
+        flying: "свободный полёт", up: "второй этаж", ground: "первый этаж", out: "снаружи", floor: "пол", asl: "м над у. м.",
+        rooms: ["Вход (улица)", "1 эт. · Прихожая", "1 эт. · Коридор / лестница", "1 эт. · Гостиная / кухня",
+                "1 эт. · Спальня / кинозал", "1 эт. · Мастерская", "1 эт. · Ванные", "2 эт. · Коридор", "2 эт. · Кухня / столовая",
+                "2 эт. · Гостиная", "2 эт. · Спальня родителей", "2 эт. · Детская 1", "2 эт. · Детская 2", "Южная терраса"] },
+};
+const LANG = [location.hash.slice(1), ...(navigator.languages || [navigator.language || "en"])]   // #de forces German
+  .map(l => String(l).slice(0, 2).toLowerCase()).find(l => l in I18N) || "en";
+const T = I18N[LANG];
+document.documentElement.lang = LANG;
+if (matchMedia("(pointer: coarse)").matches) document.body.classList.add("touch");
+document.querySelectorAll("[data-t]").forEach(el => { el.innerHTML = T[el.dataset.t]; });
+document.getElementById("pad").setAttribute("aria-label", T.pad);
+window.T = T;
+</script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.3/build/index.module.js"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from "three-mesh-bvh";
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+// teleport points exported from Blender (glTF coordinates: Y up, eye at 1.70 m; yaw = heading in the Blender plane)
+const ROOMS = [["Entrée (rue)", [-8.88, 1.73, -7.91], -1.419], ["EG · Eingang", [-5.2, 1.85, -3.72], -1.419], ["EG · Flur / escalier", [-4.17, 1.85, 0.37], 0.152], ["EG · Wohnzimmer / Küche", [-1.01, 1.85, -2.74], 3.294], ["EG · Schlafzimmer / cinéma", [2.29, 1.85, -3.65], -0.633], ["EG · Atelier", [3.69, 1.85, 2.81], 0.152], ["EG · Bains", [2.22, 1.85, 0.51], 0.152], ["OG · Flur", [-4.17, 4.35, 0.37], 0.152], ["OG · Küche / Essecke", [-0.51, 4.35, 1.83], -1.419], ["OG · Wohnzimmer", [-7.72, 4.35, -0.3], -1.419], ["OG · Elternschlafzimmer", [-2.59, 4.35, -2.5], 0.938], ["OG · Kinderzimmer 1", [2.78, 4.35, -3.12], 0.152], ["OG · Kinderzimmer 2", [3.95, 4.35, 3.18], -1.419], ["Terrasse sud", [-2.03, 4.3, 7.73], 1.723]];
+const EYE = 1.70, RADIUS = 0.28, STEP = 0.32, WALK = 1.4, RUN = 3.0;
+
+const view = document.getElementById("view");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+view.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene(); window.__scene = scene;   // debugging from the console
+scene.background = new THREE.Color(0xbcd3e3);
+scene.fog = new THREE.Fog(0xbcd3e3, 140, 380);   // site window reaches 150 m west
+const camera = new THREE.PerspectiveCamera(72, 1, 0.05, 400);
+camera.rotation.order = "YXZ";
+scene.add(new THREE.HemisphereLight(0xdfeefa, 0xd8d5ce, 1.25));   // light ground colour: ceilings read white
+const sun = new THREE.DirectionalLight(0xfff3e0, 1.6);
+sun.position.set(-20, 35, 25);
+scene.add(sun);
+const fill = new THREE.AmbientLight(0xffffff, 0.35);
+scene.add(fill);
+
+// ---- procedural textures: rebuild the Blender materials (UVs are in metres) ----
+const lin2s = c => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1 / 2.2));
+const css = (rgb, k = 1) => `rgb(${rgb.map(c => lin2s(c * k)).join(",")})`;
+function rnd(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function grain(ctx, W, H, amount, seed) {
+  if (!amount) return;
+  const img = ctx.getImageData(0, 0, W, H), r = rnd(seed), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - 0.5) * 255 * amount; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+}
+function texFromCanvas(cv, periodU, periodV) {
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.repeat.set(1 / periodU, 1 / periodV);
+  t.anisotropy = 8;
+  return t;
+}
+// running / half bond (Blender brick texture, offset every 2nd row)
+function bricks({ w, h, mortar, offset = 0.5, c1, c2, mc, grainAmt = 0.06, holes = null, seed = 7 }) {
+  const PX = 512, W = PX, H = Math.max(64, Math.round(PX * (2 * h) / w));
+  const cv = Object.assign(document.createElement("canvas"), { width: W, height: H }), g = cv.getContext("2d");
+  const sx = W / w, sy = H / (2 * h), r = rnd(seed);
+  g.fillStyle = css(mc); g.fillRect(0, 0, W, H);
+  for (let row = 0; row < 2; row++) {
+    const off = row === 1 ? offset * w : 0;
+    for (let k = -1; k <= 1; k++) {
+      const x0 = (k * w + off) * sx, y0 = row * h * sy, m = mortar * sx;
+      g.fillStyle = css(r() < 0.5 ? c1 : c2, 0.92 + 0.16 * r());
+      g.fillRect(x0 + m / 2, y0 + mortar * sy / 2, w * sx - m, h * sy - mortar * sy);
+    }
+  }
+  if (holes) {
+    g.fillStyle = "rgba(20,12,8,0.85)";
+    const p = holes.pitch * sx, s = holes.size * sx;
+    for (let y = p / 2; y < H; y += p) for (let x = p / 2; x < W; x += p) g.fillRect(x - s / 2, y - s / 2, s, s);
+  }
+  grain(g, W, H, grainAmt, seed);
+  return texFromCanvas(cv, w, 2 * h);
+}
+// stack-bond tiles with grain (Blender stone_tile_material); joint 0 = plain surface
+function tiles({ w, h, joint, base, grainAmt = 0.08, seed = 3, jointK = 0.5 }) {
+  const PX = 512, W = PX, H = Math.max(64, Math.round(PX * h / w));
+  const cv = Object.assign(document.createElement("canvas"), { width: W, height: H }), g = cv.getContext("2d");
+  g.fillStyle = css(base); g.fillRect(0, 0, W, H);
+  grain(g, W, H, grainAmt, seed);
+  if (joint > 0) {
+    const jx = Math.max(1, joint * W / w), jy = Math.max(1, joint * H / h);
+    g.fillStyle = css(base, jointK);
+    g.fillRect(0, 0, W, jy / 2); g.fillRect(0, H - jy / 2, W, jy / 2);
+    g.fillRect(0, 0, jx / 2, H); g.fillRect(W - jx / 2, 0, jx / 2, H);
+  }
+  return texFromCanvas(cv, w, h);
+}
+const MATS = {
+  Brick_Red: () => bricks({ w: 0.25, h: 0.065, mortar: 0.009, c1: [0.36, 0.15, 0.10], c2: [0.46, 0.21, 0.14], mc: [0.78, 0.75, 0.70] }),
+  Parquet_Oak: () => bricks({ w: 1.2, h: 0.12, mortar: 0.0015, offset: 0.37, c1: [0.55, 0.37, 0.20], c2: [0.64, 0.45, 0.26], mc: [0.30, 0.20, 0.11], grainAmt: 0.05 }),
+  Tile_Eingang_Grey_60x30: () => bricks({ w: 0.6, h: 0.3, mortar: 0.002, c1: [0.50, 0.52, 0.54], c2: [0.55, 0.57, 0.59], mc: [0.10, 0.10, 0.11], grainAmt: 0.05 }),
+  Pavers_Concrete_Grey: () => bricks({ w: 0.2, h: 0.1, mortar: 0.004, c1: [0.30, 0.29, 0.27], c2: [0.36, 0.35, 0.33], mc: [0.18, 0.18, 0.17] }),
+  Brick_Perforated_Floor: () => bricks({ w: 0.29, h: 0.14, mortar: 0.008, c1: [0.30, 0.11, 0.05], c2: [0.38, 0.15, 0.07], mc: [0.12, 0.07, 0.04], holes: { pitch: 0.018, size: 0.012 } }),
+  Tile_Floor_Stone_Warm_Grey: () => tiles({ w: 0.6, h: 0.6, joint: 0.002, base: [0.30, 0.272, 0.223], grainAmt: 0.06 }),
+  Dalle_Gres_Cerame_60x60: () => tiles({ w: 0.6, h: 0.6, joint: 0.003, base: [0.42, 0.42, 0.40], grainAmt: 0.05 }),
+  Tile_EG_Bath_Floor_Blue: () => tiles({ w: 0.2, h: 0.2, joint: 0.004, base: [0.24, 0.30, 0.48], grainAmt: 0.1 }),
+  Tile_EG_Bath_Wall_White: () => tiles({ w: 0.2, h: 0.25, joint: 0.003, base: [0.78, 0.78, 0.76], grainAmt: 0.04, jointK: 0.75 }),
+  Concrete_Floor: () => tiles({ w: 2, h: 2, joint: 0, base: [0.30, 0.30, 0.29], grainAmt: 0.10 }),
+  Asphalt: () => tiles({ w: 2, h: 2, joint: 0, base: [0.08, 0.08, 0.085], grainAmt: 0.12 }),
+  Granite_Speckled_Grey: () => tiles({ w: 0.5, h: 0.5, joint: 0, base: [0.32, 0.32, 0.33], grainAmt: 0.35 }),
+  Cedar_Blue_Grey: () => tiles({ w: 1.5, h: 1.5, joint: 0, base: [0.10, 0.16, 0.18], grainAmt: 0.35 }),
+};
+const cache = {};
+function fixMaterial(m) {
+  if (MATS[m.name]) {
+    cache[m.name] ??= MATS[m.name]();
+    m.map = cache[m.name]; m.color.set(0xffffff); m.needsUpdate = true;
+  }
+  if (m.name === "Glass_Clear") { m.transparent = true; m.opacity = 0.18; m.depthWrite = false; m.transmission = 0; }
+  if (m.name === "Parcel_Limit") m.visible = true;
+  m.side = THREE.DoubleSide;
+}
+
+// ---- load ----
+const colliders = [];
+const loadMsg = document.getElementById("loadmsg");
+// the model ships as a base64 script (house-model.js) because artifacts don't serve .glb files
+function loadModel() {
+  const s = document.createElement("script");
+  s.src = "house-model.js?v=202610062113";   // stamp = house.glb export time, so browsers never reuse an old model
+  s.onload = () => {
+    const bin = atob(window.HOUSE_GLB_B64), buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    new GLTFLoader().parse(buf.buffer, "", gltf => { try { onModel(gltf); } catch (err) {
+      console.error(err); loadMsg.textContent = T.errOpen + err.message; } },
+      err => { console.error(err); loadMsg.textContent = T.errRead; });
+  };
+  s.onerror = () => { loadMsg.textContent = T.errLoad; };
+  document.head.appendChild(s);
+}
+loadModel();
+function onModel(gltf) {
+  scene.add(gltf.scene);
+  gltf.scene.traverse(o => {
+    if (!o.isMesh) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(fixMaterial);
+    const n = o.name;
+    const transparent = /Glass|Window_Glass|Glazing/.test(n) || (o.material && o.material.name === "Glass_Clear");
+    if (!/Parcel_Limit|_Light$|Crown|Screen$/.test(n) && !transparent) {
+      o.geometry.computeBoundsTree(); colliders.push(o);
+    }
+  });
+  goTo(0);
+  loadMsg.textContent = T.ready;
+  startBtn.disabled = false;
+  startBtn.focus();
+}
+const startBtn = document.getElementById("start");
+startBtn.addEventListener("click", () => {
+  document.getElementById("loading").hidden = true;
+  if (!matchMedia("(pointer: coarse)").matches) renderer.domElement.requestPointerLock?.()?.catch?.(() => {});
+});
+
+// ---- player ----
+const pos = new THREE.Vector3(), vel = new THREE.Vector3();
+let yaw = 0, pitch = 0, flying = false, vy = 0;
+const keys = {};
+const sel = document.getElementById("room");
+ROOMS.forEach(([label], i) => sel.add(new Option(T.rooms[i] || label, i)));
+sel.addEventListener("change", () => goTo(+sel.value));
+function goTo(i) {
+  const [, p, a] = ROOMS[i];
+  pos.set(p[0], p[1], p[2]); vy = 0;
+  const dx = Math.cos(a), dz = -Math.sin(a);
+  yaw = Math.atan2(-dx, -dz); pitch = -0.05;
+  sel.value = i;
+}
+const ray = new THREE.Raycaster(); ray.firstHitOnly = true;
+const DOWN = new THREE.Vector3(0, -1, 0);
+function groundBelow(p, from = EYE) {
+  ray.set(new THREE.Vector3(p.x, p.y - from + STEP + 0.05, p.z), DOWN); ray.far = 6;
+  const h = ray.intersectObjects(colliders, false)[0];
+  return h ? h.point.y : null;
+}
+function blocked(p, dir, dist) {
+  for (const hgt of [STEP + 0.04, 0.9, 1.6]) {   // just above a stair riser, so beds / tables block
+    ray.set(new THREE.Vector3(p.x, p.y - EYE + hgt, p.z), dir); ray.far = dist + RADIUS;
+    if (ray.intersectObjects(colliders, false).length) return true;
+  }
+  return false;
+}
+function step(dt) {
+  const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+  const mv = new THREE.Vector3();
+  if (keys.KeyW || keys.ArrowUp) mv.add(fwd);
+  if (keys.KeyS || keys.ArrowDown) mv.sub(fwd);
+  if (keys.KeyD || keys.ArrowRight) mv.add(right);
+  if (keys.KeyA || keys.ArrowLeft) mv.sub(right);
+  mv.x += touchMove.x * right.x + touchMove.y * fwd.x;
+  mv.z += touchMove.x * right.z + touchMove.y * fwd.z;
+  const speed = (keys.ShiftLeft || keys.ShiftRight ? RUN : WALK) * (flying ? 2.5 : 1);
+  if (mv.lengthSq() > 1) mv.normalize();
+  mv.multiplyScalar(speed * dt);
+  if (flying) {
+    if (keys.KeyE || keys.Space) mv.y += speed * dt;
+    if (keys.KeyQ || keys.KeyC) mv.y -= speed * dt;
+    pos.add(mv);
+    return;
+  }
+  // slide along walls: try full move, then each axis
+  for (const m of [mv, new THREE.Vector3(mv.x, 0, 0), new THREE.Vector3(0, 0, mv.z)]) {
+    const d = m.length(); if (d < 1e-5) continue;
+    if (!blocked(pos, m.clone().normalize(), d)) { pos.add(m); break; }
+  }
+  const g = groundBelow(pos);
+  if (g !== null && pos.y - EYE - g < 0.05 && pos.y - EYE - g > -STEP - 0.05) {
+    pos.y += (g + EYE - pos.y) * Math.min(1, dt * 14); vy = 0;          // on the ground / climbing a step
+  } else {
+    vy -= 9.81 * dt; pos.y += vy * dt;
+    if (g !== null && pos.y - EYE < g) { pos.y = g + EYE; vy = 0; }
+    if (pos.y < -20) goTo(0);
+  }
+}
+
+// ---- input: pointer lock + keys (desktop), joystick + drag (touch) ----
+const canvas = renderer.domElement;
+const walkBtn = document.getElementById("walk");
+walkBtn.addEventListener("click", () => { canvas.requestPointerLock?.()?.catch?.(() => {}); });
+canvas.addEventListener("click", () => { if (!matchMedia("(pointer: coarse)").matches) canvas.requestPointerLock?.()?.catch?.(() => {}); });
+document.addEventListener("pointerlockchange", () => {
+  const on = document.pointerLockElement === canvas;
+  walkBtn.textContent = on ? T.walking : T.walk;
+  document.getElementById("hint").hidden = on;
+});
+document.addEventListener("mousemove", e => {
+  if (document.pointerLockElement !== canvas) return;
+  yaw -= e.movementX * 0.0022; pitch -= e.movementY * 0.0022;
+  pitch = Math.max(-1.45, Math.min(1.45, pitch));
+});
+addEventListener("keydown", e => { if (e.target.tagName === "SELECT") return; keys[e.code] = true; if (e.code === "KeyF") toggleFly(); });
+addEventListener("keyup", e => { keys[e.code] = false; });
+addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
+
+const flyBtn = document.getElementById("fly");
+function toggleFly() { flying = !flying; vy = 0; flyBtn.setAttribute("aria-pressed", String(flying)); }
+flyBtn.addEventListener("click", toggleFly);
+const rail = document.getElementById("rail"), coll = document.getElementById("collapse");
+coll.addEventListener("click", () => {
+  const c = rail.classList.toggle("collapsed");
+  coll.textContent = c ? T.menu : T.hide; coll.setAttribute("aria-expanded", String(!c));
+});
+
+const touchMove = { x: 0, y: 0 };
+if (matchMedia("(pointer: coarse)").matches) {
+  document.body.classList.add("touch");
+  document.getElementById("hint").innerHTML = T.touch;
+  const pad = document.getElementById("pad"), knob = document.getElementById("knob");
+  let padId = null;
+  pad.addEventListener("pointerdown", e => { padId = e.pointerId; pad.setPointerCapture(e.pointerId); movePad(e); });
+  pad.addEventListener("pointermove", e => { if (e.pointerId === padId) movePad(e); });
+  const endPad = () => { padId = null; touchMove.x = touchMove.y = 0; knob.style.transform = ""; };
+  pad.addEventListener("pointerup", endPad); pad.addEventListener("pointercancel", endPad);
+  function movePad(e) {
+    const r = pad.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const R = r.width / 2, l = Math.min(R, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+    knob.style.transform = `translate(${l * Math.cos(a)}px, ${l * Math.sin(a)}px)`;
+    touchMove.x = (l / R) * Math.cos(a); touchMove.y = -(l / R) * Math.sin(a);
+  }
+  let lookId = null, lx = 0, ly = 0;
+  canvas.addEventListener("pointerdown", e => { lookId = e.pointerId; lx = e.clientX; ly = e.clientY; });
+  canvas.addEventListener("pointermove", e => {
+    if (e.pointerId !== lookId) return;
+    yaw -= (e.clientX - lx) * 0.005; pitch -= (e.clientY - ly) * 0.005;
+    pitch = Math.max(-1.45, Math.min(1.45, pitch)); lx = e.clientX; ly = e.clientY;
+  });
+  canvas.addEventListener("pointerup", () => { lookId = null; });
+}
+
+// ---- loop ----
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize); resize();
+const readout = document.getElementById("readout");
+let last = performance.now(), acc = 0;
+renderer.setAnimationLoop(t => {
+  const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  if (colliders.length) step(dt);
+  camera.position.copy(pos); camera.rotation.set(pitch, yaw, 0);
+  renderer.render(scene, camera);
+  if ((acc += dt) > 0.25) {
+    acc = 0;
+    const floor = pos.y - EYE;
+    readout.textContent = `${flying ? T.flying : floor > 2.0 ? T.up : floor > -0.5 ? T.ground : T.out} · ${T.floor} ${floor.toFixed(2)} m · ${(457.92 + floor).toFixed(2)} ${T.asl}`;
+  }
+});
+</script>
