@@ -80,6 +80,13 @@ button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink
   font: 500 0.78rem var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--bg); }
 .howto .small kbd { display: inline-grid; height: 22px; }
 .touch .desk, body:not(.touch) .tch { display: none; }
+.choice { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice legend, .startat label { padding: 0; margin-bottom: 6px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.choice label { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 0.92rem; }
+.choice label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice input { accent-color: var(--accent); margin: 0; }
+.startat { display: grid; }
+.startat select { font: 500 0.9rem var(--display); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 7px; padding: 9px 10px; }
 .intro .status { margin: 0; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
 .intro button { font: 600 0.95rem var(--display); padding: 11px 14px; border-radius: 8px; border: 1px solid var(--accent); cursor: pointer; }
 .intro button:disabled { opacity: 0.45; cursor: progress; }
@@ -132,6 +139,15 @@ body.touch .cross { display: none; }
       <li class="tch"><span class="ico"><svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="22" cy="22" r="20"/><circle cx="22" cy="22" r="8" fill="currentColor"/></svg></span><span data-t="howTouchMove"></span></li>
       <li class="tch"><span class="ico"><svg width="44" height="30" viewBox="0 0 44 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 15 h36 M10 9 l-6 6 6 6 M34 9 l6 6 -6 6"/></svg></span><span data-t="howTouchLook"></span></li>
     </ul>
+    <fieldset class="choice">
+      <legend data-t="drinkQ"></legend>
+      <label><input type="radio" name="drink" value="wine"><span data-t="wine"></span></label>
+      <label><input type="radio" name="drink" value="beer"><span data-t="beer"></span></label>
+    </fieldset>
+    <div class="startat">
+      <label for="startRoom" data-t="startQ"></label>
+      <select id="startRoom"></select>
+    </div>
     <p class="status" id="loadmsg" data-t="loading"></p>
     <button id="start" class="primary" disabled data-t="start"></button>
   </div>
@@ -139,7 +155,7 @@ body.touch .cross { display: none; }
 <script>
 // UI language = #xx in the URL, else the first browser language among en / de / fr / ro / ru; English otherwise.
 const I18N = {
-  en: { introTitle: "Walk through the house", howMove: "Use the <b>arrow keys</b> (or W A S D) to move forward, back and sideways.", howLook: "Move the <b>mouse</b> to turn and choose your direction.", shiftKey: "Shift", howRun: "hold to run", escKey: "Esc", howExit: "gives the mouse back", howTouchMove: "Use the <b>joystick</b> at the bottom left to move.", howTouchLook: "<b>Drag</b> on the right side of the screen to look around.", ready: "The house is ready.", start: "Start", 
+  en: { drinkQ: "Your drink", wine: "Glass of wine", beer: "Can of beer", startQ: "Start the visit in", introTitle: "Walk through the house", howMove: "Use the <b>arrow keys</b> (or W A S D) to move forward, back and sideways.", howLook: "Move the <b>mouse</b> to turn and choose your direction.", shiftKey: "Shift", howRun: "hold to run", escKey: "Esc", howExit: "gives the mouse back", howTouchMove: "Use the <b>joystick</b> at the bottom left to move.", howTouchLook: "<b>Drag</b> on the right side of the screen to look around.", ready: "The house is ready.", start: "Start", 
         sub: "2562 Port · renovation project · eye at 1.70 m", hide: "Hide", menu: "Menu", goto: "Go to",
         walk: "Walk", walking: "Walking", fly: "Fly",
         hint: "Click <b>Walk</b>, then the <kbd>arrow keys</kbd> to move, mouse to look, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to stop",
@@ -150,7 +166,7 @@ const I18N = {
         rooms: ["Entrance (street)", "GF · Entrance hall", "GF · Hall / stairs", "GF · Living room / kitchen",
                 "GF · Bedroom / cinema", "GF · Workshop (atelier)", "GF · Bathrooms", "1F · Hall", "1F · Kitchen / dining",
                 "1F · Living room", "1F · Parents' bedroom", "1F · Children's room 1", "1F · Children's room 2", "South terrace"] },
-  de: { introTitle: "Rundgang durch das Haus", howMove: "Mit den <b>Pfeiltasten</b> (oder W A S D) vorwärts, rückwärts und seitwärts gehen.", howLook: "Die <b>Maus</b> bewegen, um sich umzudrehen und die Richtung zu wählen.", shiftKey: "Umschalt", howRun: "gedrückt halten zum Rennen", escKey: "Esc", howExit: "gibt die Maus wieder frei", howTouchMove: "Mit dem <b>Joystick</b> unten links bewegen.", howTouchLook: "Rechts auf dem Bildschirm <b>wischen</b>, um sich umzusehen.", ready: "Das Haus ist bereit.", start: "Los geht's", 
+  de: { drinkQ: "Ihr Getränk", wine: "Glas Wein", beer: "Dose Bier", startQ: "Rundgang beginnen in", introTitle: "Rundgang durch das Haus", howMove: "Mit den <b>Pfeiltasten</b> (oder W A S D) vorwärts, rückwärts und seitwärts gehen.", howLook: "Die <b>Maus</b> bewegen, um sich umzudrehen und die Richtung zu wählen.", shiftKey: "Umschalt", howRun: "gedrückt halten zum Rennen", escKey: "Esc", howExit: "gibt die Maus wieder frei", howTouchMove: "Mit dem <b>Joystick</b> unten links bewegen.", howTouchLook: "Rechts auf dem Bildschirm <b>wischen</b>, um sich umzusehen.", ready: "Das Haus ist bereit.", start: "Los geht's", 
         sub: "2562 Port · Umbauprojekt · Augenhöhe 1.70 m", hide: "Ausblenden", menu: "Menü", goto: "Gehe zu",
         walk: "Gehen", walking: "Unterwegs", fly: "Fliegen",
         hint: "<b>Gehen</b> klicken, dann <kbd>Pfeiltasten</kbd> zum Bewegen, Maus zum Umsehen, <kbd>Umschalt</kbd> zum Rennen, <kbd>Esc</kbd> zum Beenden",
@@ -161,7 +177,7 @@ const I18N = {
         rooms: ["Eingang (Strasse)", "EG · Eingang", "EG · Flur / Treppe", "EG · Wohnzimmer / Küche",
                 "EG · Schlafzimmer / Kino", "EG · Atelier", "EG · Bäder", "OG · Flur", "OG · Küche / Essecke",
                 "OG · Wohnzimmer", "OG · Elternschlafzimmer", "OG · Kinderzimmer 1", "OG · Kinderzimmer 2", "Terrasse Süd"] },
-  fr: { introTitle: "Visite de la maison", howMove: "Utilisez les <b>flèches du clavier</b> (ou W A S D) pour avancer, reculer et vous déplacer de côté.", howLook: "Bougez la <b>souris</b> pour tourner et choisir la direction.", shiftKey: "Maj", howRun: "maintenir pour courir", escKey: "Échap", howExit: "libère la souris", howTouchMove: "Utilisez le <b>joystick</b> en bas à gauche pour avancer.", howTouchLook: "<b>Glissez</b> sur la droite de l'écran pour regarder autour.", ready: "La maison est prête.", start: "Commencer", 
+  fr: { drinkQ: "Votre boisson", wine: "Verre de vin", beer: "Canette de bière", startQ: "Commencer la visite", introTitle: "Visite de la maison", howMove: "Utilisez les <b>flèches du clavier</b> (ou W A S D) pour avancer, reculer et vous déplacer de côté.", howLook: "Bougez la <b>souris</b> pour tourner et choisir la direction.", shiftKey: "Maj", howRun: "maintenir pour courir", escKey: "Échap", howExit: "libère la souris", howTouchMove: "Utilisez le <b>joystick</b> en bas à gauche pour avancer.", howTouchLook: "<b>Glissez</b> sur la droite de l'écran pour regarder autour.", ready: "La maison est prête.", start: "Commencer", 
         sub: "2562 Port · projet de rénovation · œil à 1.70 m", hide: "Masquer", menu: "Menu", goto: "Aller à",
         walk: "Marcher", walking: "En marche", fly: "Voler",
         hint: "Cliquez <b>Marcher</b>, puis les <kbd>flèches</kbd> pour avancer, souris pour regarder, <kbd>Maj</kbd> pour courir, <kbd>Échap</kbd> pour sortir",
@@ -172,7 +188,7 @@ const I18N = {
         rooms: ["Entrée (rue)", "Rez · Entrée", "Rez · Couloir / escalier", "Rez · Séjour / cuisine",
                 "Rez · Chambre / cinéma", "Rez · Atelier", "Rez · Bains", "Étage · Couloir", "Étage · Cuisine / coin repas",
                 "Étage · Séjour", "Étage · Chambre parents", "Étage · Chambre d'enfants 1", "Étage · Chambre d'enfants 2", "Terrasse sud"] },
-  ro: { introTitle: "Plimbare prin casă", howMove: "Folosiți <b>tastele săgeți</b> (sau W A S D) pentru a merge înainte, înapoi și lateral.", howLook: "Mișcați <b>mouse-ul</b> pentru a vă întoarce și a alege direcția.", shiftKey: "Shift", howRun: "țineți apăsat pentru a alerga", escKey: "Esc", howExit: "eliberează mouse-ul", howTouchMove: "Folosiți <b>joystick-ul</b> din stânga jos pentru deplasare.", howTouchLook: "<b>Glisați</b> în partea dreaptă a ecranului pentru a privi în jur.", ready: "Casa este gata.", start: "Începe", 
+  ro: { drinkQ: "Băutura dvs.", wine: "Pahar de vin", beer: "Doză de bere", startQ: "Începeți vizita în", introTitle: "Plimbare prin casă", howMove: "Folosiți <b>tastele săgeți</b> (sau W A S D) pentru a merge înainte, înapoi și lateral.", howLook: "Mișcați <b>mouse-ul</b> pentru a vă întoarce și a alege direcția.", shiftKey: "Shift", howRun: "țineți apăsat pentru a alerga", escKey: "Esc", howExit: "eliberează mouse-ul", howTouchMove: "Folosiți <b>joystick-ul</b> din stânga jos pentru deplasare.", howTouchLook: "<b>Glisați</b> în partea dreaptă a ecranului pentru a privi în jur.", ready: "Casa este gata.", start: "Începe", 
         sub: "2562 Port · proiect de renovare · ochi la 1.70 m", hide: "Ascunde", menu: "Meniu", goto: "Mergi la",
         walk: "Mergi", walking: "În mers", fly: "Zbor",
         hint: "Apăsați <b>Mergi</b>, apoi <kbd>săgețile</kbd> pentru deplasare, mouse-ul pentru a privi, <kbd>Shift</kbd> pentru a alerga, <kbd>Esc</kbd> pentru a ieși",
@@ -183,7 +199,7 @@ const I18N = {
         rooms: ["Intrare (stradă)", "Parter · Intrare", "Parter · Hol / scară", "Parter · Living / bucătărie",
                 "Parter · Dormitor / cinema", "Parter · Atelier", "Parter · Băi", "Etaj · Hol", "Etaj · Bucătărie / loc de luat masa",
                 "Etaj · Living", "Etaj · Dormitorul părinților", "Etaj · Camera copiilor 1", "Etaj · Camera copiilor 2", "Terasa de sud"] },
-  ru: { introTitle: "Прогулка по дому", howMove: "<b>Стрелки</b> (или W A S D) — идти вперёд, назад и в сторону.", howLook: "Двигайте <b>мышь</b>, чтобы поворачиваться и выбирать направление.", shiftKey: "Shift", howRun: "удерживайте для бега", escKey: "Esc", howExit: "освобождает мышь", howTouchMove: "<b>Джойстик</b> внизу слева — движение.", howTouchLook: "<b>Проводите</b> пальцем справа, чтобы осматриваться.", ready: "Дом готов.", start: "Начать", 
+  ru: { drinkQ: "Ваш напиток", wine: "Бокал вина", beer: "Банка пива", startQ: "Начать осмотр", introTitle: "Прогулка по дому", howMove: "<b>Стрелки</b> (или W A S D) — идти вперёд, назад и в сторону.", howLook: "Двигайте <b>мышь</b>, чтобы поворачиваться и выбирать направление.", shiftKey: "Shift", howRun: "удерживайте для бега", escKey: "Esc", howExit: "освобождает мышь", howTouchMove: "<b>Джойстик</b> внизу слева — движение.", howTouchLook: "<b>Проводите</b> пальцем справа, чтобы осматриваться.", ready: "Дом готов.", start: "Начать", 
         sub: "2562 Порт · проект реконструкции · глаза на высоте 1.70 м", hide: "Скрыть", menu: "Меню", goto: "Перейти",
         walk: "Идти", walking: "Прогулка", fly: "Полёт",
         hint: "Нажмите <b>Идти</b>, затем <kbd>стрелки</kbd> для движения, мышь — чтобы осматриваться, <kbd>Shift</kbd> — бег, <kbd>Esc</kbd> — выход",
@@ -243,6 +259,218 @@ sun.position.set(-20, 35, 25);
 scene.add(sun);
 const fill = new THREE.AmbientLight(0xffffff, 0.35);
 scene.add(fill);
+
+// ---- first-person arms + a drink (wine glass or beer can): own scene + camera, drawn over the house ----
+const armsScene = new THREE.Scene(), armsCam = new THREE.PerspectiveCamera(60, 1, 0.01, 5);
+armsScene.add(new THREE.HemisphereLight(0xfffaf2, 0x7d7368, 1.5));
+const armsSun = new THREE.DirectionalLight(0xfff1e0, 1.6); armsSun.position.set(0.6, 1, 0.8); armsScene.add(armsSun);
+const arms = new THREE.Group(); armsScene.add(arms);
+const skin = new THREE.MeshStandardMaterial({ color: 0xe0ac8a, roughness: 0.55 });
+const nail = new THREE.MeshStandardMaterial({ color: 0xf0c9b8, roughness: 0.3 });
+const sleeve = new THREE.MeshStandardMaterial({ color: 0x3a5664, roughness: 0.95 });     // denim shirt, rolled up
+const cuffMat = new THREE.MeshStandardMaterial({ color: 0x4a6875, roughness: 0.95 });
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+// hands: WebXR "generic-hand" skinned models (hands-model.js), finger bones posed in code.
+// WebXR joint frames: −Z runs along the bone towards the tip, +Y is the back of the hand.
+const FINGERS = ["index-finger", "middle-finger", "ring-finger", "pinky-finger"];
+const PHAL = ["phalanx-proximal", "phalanx-intermediate", "phalanx-distal"];
+const AX = { x: V(1, 0, 0), y: V(0, 1, 0), z: V(0, 0, 1) };
+const hands = {};
+// The model's bones are all siblings (no parent chain), so fingers are posed by hand-made forward
+// kinematics: each joint turns about its own local axes and carries the rest of the finger with it.
+const Q = (ax, a) => new THREE.Quaternion().setFromAxisAngle(AX[ax], a);
+function chain(h, names, rots) {             // names: joints from the base out; rots[i]: [[axis, angle], …]
+  const bones = names.map(n => h.bone(n)).filter(Boolean);
+  let cum = new THREE.Quaternion(), prevRest = null, prevNew = null;
+  bones.forEach((b, i) => {
+    const P = b.userData.restPos, R = b.userData.rest;
+    const pos = prevRest ? prevNew.clone().add(P.clone().sub(prevRest).applyQuaternion(cum)) : P.clone();
+    const local = new THREE.Quaternion();
+    for (const [ax, a] of (rots[i] || [])) local.multiply(Q(ax, a));
+    const q = cum.clone().multiply(R).multiply(local);
+    b.position.copy(pos); b.quaternion.copy(q);
+    cum = q.clone().multiply(R.clone().invert());
+    prevRest = P; prevNew = pos;
+  });
+}
+function poseHand(h, p) {                      // p.f[i] = [proximal, intermediate, distal] flexion (rad); p.t = thumb
+  FINGERS.forEach((f, i) => {
+    const c = p.f[i], spread = (p.spread || 0) * (1.5 - i);
+    chain(h, [`${f}-${PHAL[0]}`, `${f}-${PHAL[1]}`, `${f}-${PHAL[2]}`, `${f}-tip`],
+          [[["x", c[0]], ["z", spread]], [["x", c[1]]], [["x", c[2]]], []]);
+  });
+  chain(h, ["thumb-metacarpal", "thumb-phalanx-proximal", "thumb-phalanx-distal", "thumb-tip"], [...p.t, []]);
+}
+function addForearm(h) {                       // forearm + rolled-up sleeve behind the wrist (+Z of the wrist)
+  const w = h.bone("wrist"); if (!w) return;
+  const arm = new THREE.Group();
+  const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.036, 0.2, 24), skin);
+  fore.rotation.x = Math.PI / 2; fore.position.z = 0.1; arm.add(fore);
+  const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, 0.05, 24), cuffMat);
+  cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.215; arm.add(cuff);
+  const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.06, 0.3, 24), sleeve);
+  sl.rotation.x = Math.PI / 2; sl.position.z = 0.39; arm.add(sl);
+  w.add(arm);
+}
+function loadHands(done) {
+  const s = document.createElement("script");
+  s.src = "hands-model.js?v=1";
+  s.onload = () => {
+    let n = 0;
+    for (const side of ["left", "right"]) {
+      const bin = atob(window.HANDS_B64[side]), buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      new GLTFLoader().parse(buf.buffer, "", g => {
+        const root = g.scene, bones = {};
+        root.traverse(o => {
+          if (o.isSkinnedMesh || o.isMesh) { o.material = skin; o.frustumCulled = false; }
+          if (o.isBone || /finger|thumb|wrist/.test(o.name)) { o.userData.rest = o.quaternion.clone(); o.userData.restPos = o.position.clone(); bones[o.name] = o; }
+        });
+        hands[side] = { root, bone: n => bones[n] || bones[n.replace(/-/g, "_")] };
+        addForearm(hands[side]);
+        if (++n === 2) done();
+      }, err => console.error(err));
+    }
+  };
+  document.head.appendChild(s);
+}
+
+// drinks, built around their grip point (origin = where the hand holds them, y up)
+const alu = new THREE.MeshStandardMaterial({ color: 0xd4d8dc, roughness: 0.3, metalness: 0.25 });   // no env map: keep metals light
+function canTexture() {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 256;
+  const x = c.getContext("2d");
+  x.fillStyle = "#1f5c3d"; x.fillRect(0, 0, 512, 256);                         // green can, gold band
+  x.fillStyle = "#d9b44a"; x.fillRect(0, 150, 512, 34);
+  x.fillStyle = "#f4ecd6"; x.font = "bold 64px Archivo, Arial, sans-serif"; x.textAlign = "center";
+  x.fillText("LAGER", 128, 120); x.fillText("LAGER", 384, 120);
+  x.fillStyle = "#1f5c3d"; x.font = "bold 24px Archivo, Arial, sans-serif";
+  x.fillText("PORT · 5%", 128, 175); x.fillText("PORT · 5%", 384, 175);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function beerCan() {
+  const g = new THREE.Group(), H = 0.115, R = 0.033;
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H - 0.016, 40, 1, true),
+    new THREE.MeshStandardMaterial({ map: canTexture(), roughness: 0.35, metalness: 0.15 }));
+  body.position.y = 0.02; body.rotation.y = -0.9; g.add(body);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.86, R, 0.008, 40), alu); top.position.y = 0.02 + H / 2 - 0.004; g.add(top);
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.82, R * 0.82, 0.003, 40), alu); lid.position.y = 0.02 + H / 2; g.add(lid);
+  const tab = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.0015, 0.022), alu); tab.position.set(0, 0.022 + H / 2, 0.006); g.add(tab);
+  const bot = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.86, 0.008, 40), alu); bot.position.y = 0.02 - H / 2 + 0.004; g.add(bot);
+  return { obj: g, R };
+}
+function wineGlass() {
+  const g = new THREE.Group();
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 0.1,
+    transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false });
+  const bowl = [];                                          // bowl profile: tulip, 9 cm high, Ø 8 cm
+  for (let i = 0; i <= 16; i++) { const k = i / 16; bowl.push(new THREE.Vector2(0.006 + 0.036 * Math.sin(Math.min(1, k * 1.25) * Math.PI / 2) * (1 - 0.18 * k * k), k * 0.09)); }
+  const b = new THREE.Mesh(new THREE.LatheGeometry(bowl, 40), glassMat); b.position.y = 0.045; g.add(b);
+  const wine = [];                                          // red wine, a third of the bowl
+  for (let i = 0; i <= 8; i++) { const k = i / 8; wine.push(new THREE.Vector2(0.0055 + 0.034 * Math.sin(Math.min(1, k * 0.42 * 1.25) * Math.PI / 2), k * 0.034)); }
+  wine.push(new THREE.Vector2(0, 0.034));
+  const w = new THREE.Mesh(new THREE.LatheGeometry(wine, 40), new THREE.MeshStandardMaterial({ color: 0x5a0716, roughness: 0.15, transparent: true, opacity: 0.92 }));
+  w.position.y = 0.046; g.add(w);
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0045, 0.09, 16), glassMat));   // stem, centred on the grip
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.034, 0.003, 40), glassMat); foot.position.y = -0.045; g.add(foot);
+  return { obj: g, R: 0.004 };
+}
+
+// poses (radians) and placement in front of the eye; the drink sits in the right palm
+const GRIP = { f: [[-1.35, -1.45, -0.8], [-1.4, -1.5, -0.8], [-1.4, -1.5, -0.8], [-1.35, -1.5, -0.8]],   // round the can
+               t: [[["z", 1.55], ["x", 0.45]], [["z", 0.3]], [["z", 0.3]]] };                         // thumb across the front
+const STEM = { f: [[-1.45, -1.6, -0.9], [-1.5, -1.65, -0.9], [-1.5, -1.65, -0.9], [-1.45, -1.6, -0.85]],  // fist round the stem
+               t: [[["z", 1.3], ["x", 0.3]], [["z", 0.55]], [["z", 0.5]]] };
+const RELAX = { f: [[-0.25, -0.3, -0.15], [-0.3, -0.35, -0.15], [-0.35, -0.4, -0.2], [-0.4, -0.45, -0.25]], spread: 0.04,
+                t: [[["y", 0.1]], [["x", -0.1]], [["x", -0.15]]] };
+// model frame (both hands, neutral pose = flat open hand): fingers along −Y, index side −Z, forearm +Y,
+// palm −X (right hand). basis = where the model's X, Y, Z go in eye space; tweak = extra Euler turn.
+const PLACE = {
+  right: { pos: V(0.15, -0.15, -0.36), basis: [V(1, 0, 0), V(0, 0, 1), V(0, -1, 0)], tweak: [0.12, 0.55, 0.05] },  // palm left, fingers forward
+  left:  { pos: V(-0.17, -0.19, -0.36), basis: [V(0, -1, 0), V(0, 0, 1), V(-1, 0, 0)], tweak: [0.25, -0.25, 0.1] }, // palm down
+  beer:  { pos: V(-0.024, -0.02, -0.004), rot: [-Math.PI / 2, 0, 0] },   // in the right hand's model frame, upright
+  wine:  { pos: V(-0.008, -0.03, -0.004), rot: [-Math.PI / 2, 0, 0] },
+};
+function orient(root, pl) {
+  root.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(...pl.basis));
+  root.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...pl.tweak)));
+  root.position.copy(pl.pos);
+}
+let drinkObj = null, drink = "beer";
+try { drink = localStorage.getItem("kz9-drink") || "beer"; } catch (e) {}
+// grasp solver: every finger joint bends in small steps until that finger would touch the drink's
+// axis-aligned cylinder (radius R + finger thickness) — fingers wrap round it instead of going through
+function grasp(h, R, thumbBase, thumbFixed, maxFlex = [1.6, 1.8, 1.4]) {
+  h.root.updateMatrixWorld(true);
+  const A = drinkObj.localToWorld(V(0, -1, 0)), B = drinkObj.localToWorld(V(0, 1, 0)), AB = B.clone().sub(A).normalize();
+  const tmp = new THREE.Vector3(), wp = n => h.bone(n).getWorldPosition(new THREE.Vector3());
+  const away = p => tmp.copy(p).sub(A).cross(AB).length();               // distance to the drink axis
+  const touches = (names, from, clear) => {
+    h.root.updateMatrixWorld(true);
+    const pts = names.slice(from).map(wp);
+    for (let i = 0; i < pts.length; i++) {
+      if (away(pts[i]) < clear) return true;
+      for (const t of [0.2, 0.4, 0.6, 0.8]) if (i && away(pts[i].clone().lerp(pts[i - 1], t)) < clear) return true;
+    }
+    return false;
+  };
+  const curl = (names, rotsOf, ang, steps, clear, sign, max) => {
+    for (let k = 0; k < ang.length; k++) {
+      while (Math.abs(ang[k]) < max[k]) {
+        ang[k] += sign * 0.03; chain(h, names, rotsOf(ang));
+        if (touches(names, k, clear)) { ang[k] -= sign * 0.03; chain(h, names, rotsOf(ang)); break; }
+      }
+    }
+  };
+  FINGERS.forEach((f, i) => {
+    const names = [`${f}-${PHAL[0]}`, `${f}-${PHAL[1]}`, `${f}-${PHAL[2]}`, `${f}-tip`];
+    curl(names, a => [[["x", a[0]]], [["x", a[1]]], [["x", a[2]]], []], [0, 0, 0], 3, R + 0.011 - i * 0.0005, -1, maxFlex);
+  });
+  const tn = ["thumb-metacarpal", "thumb-phalanx-proximal", "thumb-phalanx-distal", "thumb-tip"];
+  if (thumbFixed) chain(h, tn, [thumbBase, ...thumbFixed, []]);          // wine: thumb along the stem
+  else {
+    // lift the thumb root off the drink until the whole thumb is clear, then curl it until it touches
+    let lift = 0;
+    const base = () => thumbBase.map(([ax, v]) => [ax, ax === "x" ? v - lift : v]);
+    chain(h, tn, [base(), [], [], []]);
+    while (touches(tn, 0, R + 0.011) && lift < 1.5) { lift += 0.03; chain(h, tn, [base(), [], [], []]); }
+    curl(tn, a => [base(), [["z", a[0]]], [["z", a[1]]], []], [0, 0], 2, R + 0.011, 1, [1.2, 1.2]);
+  }
+}
+const RIGHT_BASE = { beer: [["z", 1.45], ["x", 0.5]], wine: [["z", 0.95], ["x", 0.75]] };   // thumb root: across the can / up the stem
+const THUMB_WINE = [[["x", -0.35]], [["x", -0.45]]];
+function setDrink(kind) {
+  drink = kind;
+  const h = hands.right; if (!h) return;
+  if (drinkObj) h.root.remove(drinkObj);
+  const d = kind === "wine" ? wineGlass() : beerCan();
+  drinkObj = d.obj;
+  const pl = PLACE[kind];
+  drinkObj.position.copy(pl.pos); drinkObj.rotation.set(...pl.rot);
+  h.root.add(drinkObj);
+  if (kind === "wine") {
+    // put the stem where a closed fist passes: centre of the curled middle finger
+    poseHand(h, STEM); h.root.updateMatrixWorld(true);
+    const c = new THREE.Vector3();
+    for (const n of PHAL.map(x => `middle-finger-${x}`).concat("middle-finger-tip")) c.add(h.bone(n).getWorldPosition(new THREE.Vector3()));
+    h.root.worldToLocal(c.multiplyScalar(0.25));
+    drinkObj.position.set(c.x, c.y, pl.pos.z);
+  }
+  poseHand(h, { f: [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]], t: [RIGHT_BASE[kind], [], []] });
+  grasp(h, d.R, RIGHT_BASE[kind], kind === "wine" ? THUMB_WINE : null,
+        kind === "wine" ? [1.6, 1.8, 1.4] : [1.5, 1.6, 0.85]);   // can: fingertips stop at its side
+}
+function placeHands() {
+  for (const side of ["left", "right"]) {
+    orient(hands[side].root, PLACE[side]);
+    arms.add(hands[side].root);
+  }
+  poseHand(hands.left, RELAX);
+  setDrink(drink);
+}
+loadHands(placeHands);
+window.__hands = { hands, poseHand, chain, orient, grasp, RIGHT_BASE, PLACE, GRIP, STEM, RELAX, setDrink, placeHands, arms };   // tuning from the console
+let bob = 0;
 
 // ---- procedural textures: rebuild the Blender materials (UVs are in metres) ----
 const lin2s = c => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1 / 2.2));
@@ -330,7 +558,7 @@ const loadMsg = document.getElementById("loadmsg");
 // the model ships as a base64 script (house-model.js) because artifacts don't serve .glb files
 function loadModel() {
   const s = document.createElement("script");
-  s.src = "house-model.js?v=202610062113";   // stamp = house.glb export time, so browsers never reuse an old model
+  s.src = "house-model.js?v=202610062120";   // stamp = house.glb export time, so browsers never reuse an old model
   s.onload = () => {
     const bin = atob(window.HOUSE_GLB_B64), buf = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
@@ -353,13 +581,20 @@ function onModel(gltf) {
       o.geometry.computeBoundsTree(); colliders.push(o);
     }
   });
-  goTo(0);
+  goTo(+startRoom.value || 0);
   loadMsg.textContent = T.ready;
   startBtn.disabled = false;
   startBtn.focus();
 }
 const startBtn = document.getElementById("start");
+const startRoom = document.getElementById("startRoom");
+ROOMS.forEach(([label], i) => startRoom.add(new Option(T.rooms[i] || label, i)));
+document.querySelectorAll('input[name="drink"]').forEach(r => {
+  r.checked = r.value === drink;
+  r.addEventListener("change", () => { drink = r.value; setDrink(drink); try { localStorage.setItem("kz9-drink", drink); } catch (e) {} });
+});
 startBtn.addEventListener("click", () => {
+  goTo(+startRoom.value);
   document.getElementById("loading").hidden = true;
   if (!matchMedia("(pointer: coarse)").matches) renderer.domElement.requestPointerLock?.()?.catch?.(() => {});
 });
@@ -482,16 +717,27 @@ if (matchMedia("(pointer: coarse)").matches) {
 // ---- loop ----
 function resize() {
   const w = view.clientWidth, h = view.clientHeight;
-  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false); camera.aspect = armsCam.aspect = w / h; camera.updateProjectionMatrix(); armsCam.updateProjectionMatrix();
 }
 addEventListener("resize", resize); resize();
 const readout = document.getElementById("readout");
 let last = performance.now(), acc = 0;
 renderer.setAnimationLoop(t => {
   const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  const before = pos.clone();
   if (colliders.length) step(dt);
   camera.position.copy(pos); camera.rotation.set(pitch, yaw, 0);
+  // arms sway with the walking pace and follow the head a little when looking up / down
+  const pace = Math.hypot(pos.x - before.x, pos.z - before.z) / Math.max(dt, 1e-3);
+  bob += dt * (pace > 0.2 ? 2.2 + pace * 1.6 : 0);
+  const amp = Math.min(1, pace / 2);
+  arms.position.set(Math.sin(bob) * 0.012 * amp, -Math.abs(Math.cos(bob)) * 0.014 * amp, 0);
+  arms.rotation.x = -pitch * 0.12;
+  arms.visible = !flying;
+  renderer.autoClear = true;
   renderer.render(scene, camera);
+  renderer.autoClear = false; renderer.clearDepth();
+  renderer.render(armsScene, armsCam);
   if ((acc += dt) > 0.25) {
     acc = 0;
     const floor = pos.y - EYE;
